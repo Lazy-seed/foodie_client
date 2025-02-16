@@ -41,6 +41,8 @@ export default function LoginPage({ isLogin = false }) {
             }
             <div className="container d-flex justify-content-center align-items-center vh-100">
                 <div className="card shadow px-4 py-1" style={{ width: "100%", maxWidth: "400px" }}>
+                <div className="hero-bg bg_cover" style={{ backgroundImage: "url(assets/images/hero/hero-four_bg.png)" }}></div>
+
                     <h3 className="text-center mb-3">{isLogin ? 'Login' : 'Signup'}</h3>
                     <div>
                         {

@@ -49,7 +49,7 @@ export default function Cart() {
   useEffect(() => {
     let itemprice = 0
     useCartData?.forEach(ele => {
-      itemprice += ele?.productId?.price
+      itemprice += ele?.productId?.price * ele?.quantity
     });
     setPriceInfo((prev) => ({ ...prev, items: itemprice, total: prev?.shipping + itemprice }))
   }, [useCartData])
@@ -119,6 +119,81 @@ export default function Cart() {
   useEffect(() => {
     getCartData()
   }, [])
+  const handlePayment = async () => {
+    setOverLoader(true);
+    const payload = {
+      firstName: useAddress?.firstName,
+      lastName: useAddress?.lastName,
+      address: {
+        line1: useAddress?.addressLine1,
+        line2: useAddress?.addressLine2 || "",
+      },
+      city: useAddress?.city,
+      postcode: useAddress?.postcode,
+      contact: useAddress?.contact,
+      orderNotes: useAddress?.orderNotes || "",
+    };
+    try {
+      const response = await JwtApi.post('/create-order', { 
+        amount: usePriceInfo.total * 100, // Sending total amount in paise
+        currency: "INR",
+        ...payload
+
+      });
+      const orderId = response?.id; // Ensure order_id is correctly retrieved from backend
+  
+      if (!orderId) {
+        toast.error("Order ID not received from backend!");
+        return;
+      }
+  
+      const options = {
+        key: "rzp_test_malQGfAFWbJNnT", // Razorpay Key ID
+        amount: usePriceInfo.total * 100, // Amount in paise
+        currency: "INR",
+        name: "Foodie Website",
+        description: "Order Payment",
+        order_id: orderId, // Order ID from backend
+        handler: function (response) {
+          alert("Payment Successful: " + response.razorpay_payment_id);
+          
+          fetch("http://localhost:5000/api/verify-payment", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(response),
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.success) {
+                toast.success("Payment Verified Successfully");
+                handleSubmit()
+              } else {
+                toast.error("Payment Verification Failed");
+              }
+            });
+        },
+        prefill: {
+          name: useAddress?.firstName + " " + useAddress?.lastName,
+          email: "customer@example.com",
+          contact: useAddress?.contact,
+        },
+        theme: {
+          color: "#F37254",
+        },
+      };
+  
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+      
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Something went wrong!");
+    } finally {
+      setOverLoader(false);
+    }
+  };
+  
   return (
     <div>
       {
@@ -344,7 +419,7 @@ export default function Cart() {
                 }
                 {
                   usePage === "address" &&
-                  <button className="theme-btn style-one" onClick={() => { handleSubmit() }}>Pay </button>
+                  <button className="theme-btn style-one" onClick={handlePayment}>Pay </button>
                 }
               </div>
             </div>
