@@ -1,9 +1,10 @@
 import axios from "axios";
-import toast from "react-hot-toast";
 
+// const baseURL = "http://localhost:5000/api"
+const baseURL = "https://foodie.api.rkoko.online/api"
 // Base Axios instance
 const api = axios.create({
-  baseURL: "http://localhost:5000/api", // Replace with your API base URL
+  baseURL, // Replace with your API base URL
   timeout: 50000, // Optional: timeout for requests
   withCredentials: true, // Important: enables sending cookies with requests
 });
