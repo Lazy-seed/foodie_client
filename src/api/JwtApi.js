@@ -1,25 +1,57 @@
-import axios from "axios";
+/**
+ * JWT API Client
+ * 
+ * This module provides an axios-based API client that automatically
+ * includes authentication tokens in requests.
+ * 
+ * Features:
+ * - Automatically adds JWT token to Authorization header
+ * - Sends cookies with requests (withCredentials)
+ * - Handles 401 errors (token expiration)
+ * - Provides convenient methods for all HTTP verbs
+ */
 
-const baseURL = "http://localhost:8000/api"
-// const baseURL = "https://foodie.api.rkoko.online/api"
+import axios from "axios";
+import store from '../app/store';
+
+const baseURL = "http://localhost:8000/api";
+
 // Base Axios instance
 const api = axios.create({
-  baseURL, // Replace with your API base URL
-  timeout: 50000, // Optional: timeout for requests
-  withCredentials: true, // Important: enables sending cookies with requests
+  baseURL,
+  timeout: 50000,
+  withCredentials: true, // Enables sending cookies with requests
 });
 
-// Add a response interceptor for error handling
+// Request interceptor to add auth token to headers
+api.interceptors.request.use(
+  (config) => {
+    // Get the current auth token from Redux store
+    const state = store.getState();
+    const token = state.auth?.token;
+
+    // Add Authorization header if token exists
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor for error handling
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     // Handle token expiration or unauthorized errors
     if (error.response?.status === 401) {
-      // toast.error("Unauthorized! Redirecting to login in 3 seconds...");x
-      // Perform logout or redirect to login logic here
-      // setTimeout(() => {
-      //   window.location.href="/"
-      // }, 3000)
+      console.error("Unauthorized request - token may be expired");
+      // You can dispatch a logout action here if needed
+      // store.dispatch(logOut());
+      // window.location.href = "/login";
     }
     return Promise.reject(error);
   }
@@ -27,6 +59,11 @@ api.interceptors.response.use(
 
 // Reusable API functions
 const JwtApi = {
+  /**
+   * GET request
+   * @param {string} url - API endpoint
+   * @param {object} params - Query parameters
+   */
   get: async (url, params = {}) => {
     try {
       const response = await api.get(url, { params });
@@ -37,6 +74,12 @@ const JwtApi = {
     }
   },
 
+  /**
+   * POST request
+   * @param {string} url - API endpoint
+   * @param {object} data - Request body
+   * @param {object} config - Additional axios config
+   */
   post: async (url, data = {}, config = {}) => {
     try {
       const response = await api.post(url, data, config);
@@ -47,6 +90,12 @@ const JwtApi = {
     }
   },
 
+  /**
+   * PUT request
+   * @param {string} url - API endpoint
+   * @param {object} data - Request body
+   * @param {object} config - Additional axios config
+   */
   put: async (url, data = {}, config = {}) => {
     try {
       const response = await api.put(url, data, config);
@@ -57,6 +106,12 @@ const JwtApi = {
     }
   },
 
+  /**
+   * PATCH request
+   * @param {string} url - API endpoint
+   * @param {object} data - Request body
+   * @param {object} config - Additional axios config
+   */
   patch: async (url, data = {}, config = {}) => {
     try {
       const response = await api.patch(url, data, config);
@@ -67,6 +122,12 @@ const JwtApi = {
     }
   },
 
+  /**
+   * DELETE request
+   * @param {string} url - API endpoint
+   * @param {object} params - Query parameters
+   * @param {object} config - Additional axios config
+   */
   delete: async (url, params = {}, config = {}) => {
     try {
       const response = await api.delete(url, { params }, config);

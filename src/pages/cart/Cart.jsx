@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from "react-redux";
 import { Link, useNavigate } from 'react-router-dom';
 import { Trash2, Plus, Minus, ArrowRight, CreditCard } from 'react-feather';
@@ -11,25 +11,33 @@ import {
   clearCart,
   selectCartItems,
   selectCartTotalAmount,
-  selectCartTotalQuantity
+  selectCartTotalQuantity,
 } from '../../features/cart/cartSlice';
 import {
+  useGetCartQuery,
   useUpdateCartItemApiMutation,
   useRemoveCartItemApiMutation
 } from '../../features/cart/cartApiSlice';
+import JwtApi from '../../api/JwtApi';
 
 export default function Cart() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const user = useSelector(selectCurrentUser);
-  const cartItems = useSelector(selectCartItems);
+  const localCartItems = useSelector(selectCartItems);
   const totalAmount = useSelector(selectCartTotalAmount);
   const totalQuantity = useSelector(selectCartTotalQuantity);
+
+  // Fetch cart from API if user is logged in
+  const { data: apiCartData, isLoading: isLoadingCart } = useGetCartQuery(undefined, {
+    skip: !user, // Only fetch if user is logged in
+  });
 
   const [updateCartItemApi] = useUpdateCartItemApiMutation();
   const [removeCartItemApi] = useRemoveCartItemApiMutation();
 
   const [step, setStep] = useState('cart'); // cart, address
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [address, setAddress] = useState({
     firstName: "",
     lastName: "",
@@ -40,6 +48,9 @@ export default function Cart() {
     contact: "",
     orderNotes: "",
   });
+
+  // Use API cart data if available, otherwise use local cart
+  const cartItems = user && apiCartData?.items ? apiCartData.items : localCartItems;
 
   const shippingFee = 50;
   const finalTotal = totalAmount + shippingFee;
@@ -93,21 +104,138 @@ export default function Cart() {
     setAddress(prev => ({ ...prev, [name]: value }));
   };
 
+  /**
+   * Razorpay Payment Integration
+   * This function creates a Razorpay order and handles the payment flow
+   */
   const handlePayment = async () => {
+    // Validate required fields
     if (!address.firstName || !address.addressLine1 || !address.contact) {
       toast.error("Please fill in all required fields");
       return;
     }
 
-    // Payment logic here (Razorpay integration)
-    toast.success("Proceeding to payment...");
-    // For now, just simulate success
-    setTimeout(() => {
-      toast.success("Order placed successfully!");
-      dispatch(clearCart());
-      navigate('/');
-    }, 1500);
+    // Check if user is logged in
+    if (!user) {
+      toast.error("Please login to place an order");
+      navigate('/login');
+      return;
+    }
+
+    setIsProcessingPayment(true);
+
+    try {
+      // Step 1: Create Razorpay order on backend
+      const orderResponse = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5001'}/api/create-order`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: Math.round(finalTotal * 100), // Convert to paise (₹1 = 100 paise)
+        }),
+      });
+
+      const orderData = await orderResponse.json();
+
+      if (!orderData.id) {
+        throw new Error('Failed to create order');
+      }
+
+      // Step 2: Configure Razorpay options
+      const options = {
+        key: process.env.REACT_APP_RAZORPAY_KEY_ID || 'rzp_test_your_key_id', // Replace with your Razorpay key
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: 'Foodo',
+        description: 'Food Order Payment',
+        order_id: orderData.id,
+        handler: async function (response) {
+          // Step 3: Payment successful - verify payment on backend
+          try {
+            const verifyResponse = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5001'}/api/verify-payment`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+
+            const verifyData = await verifyResponse.json();
+
+            if (verifyData.success) {
+              // Step 4: Create order in database
+              // Transform address data to match backend schema
+              const orderData = {
+                firstName: address.firstName,
+                lastName: address.lastName,
+                address: {
+                  line1: address.addressLine1,
+                  line2: address.addressLine2 || ''
+                },
+                city: address.city,
+                postcode: address.postcode,
+                contact: address.contact,
+                orderNotes: address.orderNotes
+              };
+
+              await JwtApi.post('order/create', orderData);
+
+              toast.success("Payment successful! Order placed.");
+              dispatch(clearCart());
+              navigate('/profile/orders');
+            } else {
+              toast.error("Payment verification failed");
+            }
+          } catch (error) {
+            console.error('Payment verification error:', error);
+            toast.error("Payment verification failed");
+          } finally {
+            setIsProcessingPayment(false);
+          }
+        },
+        prefill: {
+          name: `${address.firstName} ${address.lastName}`,
+          email: user.email,
+          contact: address.contact,
+        },
+        theme: {
+          color: '#DC2626', // Red color matching your theme
+        },
+        modal: {
+          ondismiss: function () {
+            setIsProcessingPayment(false);
+            toast.error("Payment cancelled");
+          }
+        }
+      };
+
+      // Step 5: Open Razorpay payment modal
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+
+    } catch (error) {
+      console.error('Payment error:', error);
+      toast.error("Failed to initiate payment. Please try again.");
+      setIsProcessingPayment(false);
+    }
   };
+
+  // Show loading state while fetching cart
+  if (user && isLoadingCart) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading cart...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (cartItems.length === 0) {
     return (
@@ -115,7 +243,7 @@ export default function Cart() {
         <div className="text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Your Cart is Empty</h2>
           <p className="text-gray-600 mb-8">Looks like you haven't added anything to your cart yet.</p>
-          <Link to="/menu/all" className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-full text-white bg-red-600 hover:bg-red-700 transition-colors">
+          <Link to="/menu/Popular" className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-full text-white bg-red-600 hover:bg-red-700 transition-colors">
             Start Shopping <ArrowRight className="ml-2" size={20} />
           </Link>
         </div>
@@ -282,15 +410,15 @@ export default function Cart() {
               <div className="space-y-4 mb-6">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal ({totalQuantity} items)</span>
-                  <span>${totalAmount.toFixed(2)}</span>
+                  <span>₹{totalAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>Shipping Fee</span>
-                  <span>${shippingFee.toFixed(2)}</span>
+                  <span>₹{shippingFee.toFixed(2)}</span>
                 </div>
                 <div className="border-t border-gray-100 pt-4 flex justify-between text-lg font-bold text-gray-900">
                   <span>Total</span>
-                  <span>${finalTotal.toFixed(2)}</span>
+                  <span>₹{finalTotal.toFixed(2)}</span>
                 </div>
               </div>
 
@@ -304,9 +432,19 @@ export default function Cart() {
               ) : (
                 <button
                   onClick={handlePayment}
-                  className="w-full py-3 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition-colors flex justify-center items-center gap-2"
+                  disabled={isProcessingPayment}
+                  className="w-full py-3 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition-colors flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Pay Now <CreditCard size={20} />
+                  {isProcessingPayment ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      Pay with Razorpay <CreditCard size={20} />
+                    </>
+                  )}
                 </button>
               )}
             </div>

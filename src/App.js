@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
 import PrivateRoute from "./components/PrivateRoute";
@@ -10,7 +10,7 @@ import LoginPage from "./pages/LoginPage";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Page404 from "./pages/404/Page404";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { useRefreshMutation } from "./features/auth/authApiSlice";
 import { selectCurrentUser } from "./features/auth/authSlice";
 
@@ -18,17 +18,19 @@ const App = () => {
   const { pathname } = useLocation();
   const [refresh] = useRefreshMutation();
   const user = useSelector(selectCurrentUser);
+  const hasRefreshed = useRef(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
 
-  // Auto-refresh token on app load if user exists in persisted state
+  // Auto-refresh token ONCE on app load if user exists in persisted state
   useEffect(() => {
-    if (user) {
+    if (user && !hasRefreshed.current) {
+      hasRefreshed.current = true;
       refresh();
     }
-  }, [refresh, user]);
+  }, []); // Empty dependency array - only run once on mount
 
   return (
     <Routes>
