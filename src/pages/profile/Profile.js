@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './profile.css';
 import bgImg from '../../assets/images/bg/page-bg.jpg'
-import { delLoginInfo } from '../../redux/slices/userSlice';
+import { logOut } from '../../features/auth/authSlice';
 import { useDispatch } from 'react-redux';
-import JwtApi from '../../jwt/JwtApi';
+import JwtApi from '../../api/JwtApi';
 import moment from 'moment'
 export default function Profile() {
   const { section } = useParams(); // Get the section from the URL
@@ -24,7 +24,7 @@ export default function Profile() {
   };
 
   const handleLogout = () => {
-    dispatch(delLoginInfo());
+    dispatch(logOut());
   };
 
   // const renderSectionContent = () => {
@@ -117,8 +117,8 @@ export default function Profile() {
                           return (
                             <tr key={index}>
                               <td>{item?._id?.slice(-6)}</td>
-                              <td>{ moment(item?.createdAt)?.format('YYYY-MM-DD') }</td>
-                              <td>{ moment(item?.createdAt)?.format('hh : mm a') }</td>
+                              <td>{moment(item?.createdAt)?.format('YYYY-MM-DD')}</td>
+                              <td>{moment(item?.createdAt)?.format('hh : mm a')}</td>
                               <td>
                                 <ul>
                                   {
@@ -130,8 +130,8 @@ export default function Profile() {
                                   }
                                 </ul>
                               </td>
-                              <td>{ item?.totalPrice }</td>
-                              <td>{ item?.status }</td>
+                              <td>{item?.totalPrice}</td>
+                              <td>{item?.status}</td>
                             </tr>
                           )
                         })

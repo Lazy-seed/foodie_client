@@ -5,6 +5,8 @@ import Cart from "../pages/cart/Cart";
 import Profile from "../pages/profile/Profile";
 import LoginPage from "../pages/LoginPage";
 import Page404 from "../pages/404/Page404";
+import ForgotPassword from "../pages/ForgotPassword";
+import ResetPassword from "../pages/ResetPassword";
 
 const routes = [
   { path: "/", element: <Home /> },
@@ -13,6 +15,8 @@ const routes = [
   { path: "/profile/:section", element: <Profile />, isProtected: true },
   { path: "/login", element: <LoginPage isLogin={true} /> },
   { path: "/signup", element: <LoginPage isLogin={false} /> },
+  { path: "/forgot-password", element: <ForgotPassword /> },
+  { path: "/reset-password/:resetToken", element: <ResetPassword /> },
   { path: "*", element: <Page404 /> },
 ];
 

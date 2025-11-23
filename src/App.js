@@ -1,39 +1,54 @@
-// D:\projects\foodie\foodie\src\App.js
 import React, { useEffect } from "react";
-import { useSelector } from 'react-redux';
-import { Route, Routes, useLocation } from "react-router-dom";
-import './App.css';
-import routes from "./routes/routes"; // Import routes array
-import Footer from "./utilities/Footer";
-import Navbar from "./utilities/Navbar";
-import ProtectedRoute from "./utilities/ProtectedRoute.js";
+import { Routes, Route, useLocation } from "react-router-dom";
+import MainLayout from "./layouts/MainLayout";
+import PrivateRoute from "./components/PrivateRoute";
+import Home from "./pages/Home";
+import ProductList from "./pages/ProductList";
+import Cart from "./pages/cart/Cart";
+import Profile from "./pages/profile/Profile";
+import LoginPage from "./pages/LoginPage";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import Page404 from "./pages/404/Page404";
+import { useDispatch, useSelector } from "react-redux";
+import { useRefreshMutation } from "./features/auth/authApiSlice";
+import { selectCurrentUser } from "./features/auth/authSlice";
 
 const App = () => {
   const { pathname } = useLocation();
-  const isLoggedIn = useSelector((state) => state.auth.isLoggedIn); // Check user login status
+  const [refresh] = useRefreshMutation();
+  const user = useSelector(selectCurrentUser);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
 
+  // Auto-refresh token on app load if user exists in persisted state
+  useEffect(() => {
+    if (user) {
+      refresh();
+    }
+  }, [refresh, user]);
+
   return (
-    <div>
-      <Navbar />
-      <Routes>
-        {routes.map(({ path, element, isProtected }, index) => (
-          <Route
-            key={index}
-            path={path}
-            element={
-              <ProtectedRoute isProtected={isProtected} isLoggedIn={isLoggedIn}>
-                {element}
-              </ProtectedRoute>
-            }
-          />
-        ))}
-      </Routes>
-      <Footer />
-    </div>
+    <Routes>
+      <Route path="/" element={<MainLayout />}>
+        <Route index element={<Home />} />
+        <Route path="menu/:catg" element={<ProductList />} />
+        <Route path="cart" element={<Cart />} />
+        <Route path="login" element={<LoginPage isLogin={true} />} />
+        <Route path="signup" element={<LoginPage isLogin={false} />} />
+        <Route path="forgot-password" element={<ForgotPassword />} />
+        <Route path="reset-password/:resetToken" element={<ResetPassword />} />
+
+        {/* Protected Routes */}
+        <Route element={<PrivateRoute />}>
+          <Route path="profile/:section" element={<Profile />} />
+        </Route>
+
+        <Route path="*" element={<Page404 />} />
+      </Route>
+    </Routes>
   );
 };
 

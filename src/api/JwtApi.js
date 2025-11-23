@@ -1,7 +1,7 @@
 import axios from "axios";
 
-// const baseURL = "http://localhost:5000/api"
-const baseURL = "https://foodie.api.rkoko.online/api"
+const baseURL = "http://localhost:8000/api"
+// const baseURL = "https://foodie.api.rkoko.online/api"
 // Base Axios instance
 const api = axios.create({
   baseURL, // Replace with your API base URL
