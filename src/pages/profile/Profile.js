@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { User, Package, LogOut, Clock, MapPin, Phone } from 'react-feather';
+import { User, Package, LogOut, Clock, MapPin, Phone, Plus } from 'react-feather';
 import moment from 'moment';
+import toast from 'react-hot-toast';
 import { logOut, selectCurrentUser } from '../../features/auth/authSlice';
 import JwtApi from '../../api/JwtApi';
+import AddressCard from '../../components/AddressCard';
+import AddressForm from '../../components/AddressForm';
 
 export default function Profile() {
   const { section } = useParams();
@@ -15,6 +18,13 @@ export default function Profile() {
   const [activeSection, setActiveSection] = useState(section || 'profile');
   const [orderList, setOrderList] = useState([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+
+  // Address management state
+  const [addresses, setAddresses] = useState([]);
+  const [isLoadingAddresses, setIsLoadingAddresses] = useState(false);
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [editingAddress, setEditingAddress] = useState(null);
+  const [isSavingAddress, setIsSavingAddress] = useState(false);
 
   // Sync activeSection with URL parameter
   useEffect(() => {
@@ -44,9 +54,84 @@ export default function Profile() {
     }
   };
 
+  // Fetch user addresses
+  const getAddresses = async () => {
+    setIsLoadingAddresses(true);
+    try {
+      const res = await JwtApi.get('address');
+      setAddresses(res.addresses || []);
+    } catch (err) {
+      console.error('Failed to fetch addresses:', err);
+      toast.error('Failed to load addresses');
+    } finally {
+      setIsLoadingAddresses(false);
+    }
+  };
+
+  // Add new address
+  const handleAddAddress = async (addressData) => {
+    setIsSavingAddress(true);
+    try {
+      await JwtApi.post('address', addressData);
+      toast.success('Address added successfully');
+      setShowAddressForm(false);
+      getAddresses();
+    } catch (err) {
+      console.error('Failed to add address:', err);
+      toast.error(err.response?.data?.message || 'Failed to add address');
+    } finally {
+      setIsSavingAddress(false);
+    }
+  };
+
+  // Update address
+  const handleUpdateAddress = async (addressData) => {
+    setIsSavingAddress(true);
+    try {
+      await JwtApi.put(`address/${editingAddress._id}`, addressData);
+      toast.success('Address updated successfully');
+      setEditingAddress(null);
+      setShowAddressForm(false);
+      getAddresses();
+    } catch (err) {
+      console.error('Failed to update address:', err);
+      toast.error('Failed to update address');
+    } finally {
+      setIsSavingAddress(false);
+    }
+  };
+
+  // Delete address
+  const handleDeleteAddress = async (addressId) => {
+    if (!window.confirm('Are you sure you want to delete this address?')) return;
+
+    try {
+      await JwtApi.delete(`address/${addressId}`);
+      toast.success('Address deleted successfully');
+      getAddresses();
+    } catch (err) {
+      console.error('Failed to delete address:', err);
+      toast.error('Failed to delete address');
+    }
+  };
+
+  // Set default address
+  const handleSetDefaultAddress = async (addressId) => {
+    try {
+      await JwtApi.patch(`address/${addressId}/default`);
+      toast.success('Default address updated');
+      getAddresses();
+    } catch (err) {
+      console.error('Failed to set default address:', err);
+      toast.error('Failed to set default address');
+    }
+  };
+
   useEffect(() => {
     if (activeSection === 'orders') {
       getOrders();
+    } else if (activeSection === 'addresses') {
+      getAddresses();
     }
   }, [activeSection]);
 
@@ -80,33 +165,43 @@ export default function Profile() {
                 <nav className="space-y-2">
                   <button
                     onClick={() => handleSectionChange('profile')}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeSection === 'profile'
-                        ? 'bg-red-50 text-red-600 font-medium'
-                        : 'text-gray-700 hover:bg-gray-50'
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeSection === 'profile'
+                      ? 'bg-red-600 text-white'
+                      : 'text-gray-700 hover:bg-gray-100'
                       }`}
                   >
                     <User size={20} />
-                    <span>Profile</span>
+                    <span className="font-medium">Profile</span>
                   </button>
+
                   <button
                     onClick={() => handleSectionChange('orders')}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeSection === 'orders'
-                        ? 'bg-red-50 text-red-600 font-medium'
-                        : 'text-gray-700 hover:bg-gray-50'
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeSection === 'orders'
+                      ? 'bg-red-600 text-white'
+                      : 'text-gray-700 hover:bg-gray-100'
                       }`}
                   >
                     <Package size={20} />
-                    <span>Orders</span>
+                    <span className="font-medium">Orders</span>
                   </button>
+
                   <button
-                    onClick={() => handleSectionChange('logout')}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeSection === 'logout'
-                        ? 'bg-red-50 text-red-600 font-medium'
-                        : 'text-gray-700 hover:bg-gray-50'
+                    onClick={() => handleSectionChange('addresses')}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeSection === 'addresses'
+                      ? 'bg-red-600 text-white'
+                      : 'text-gray-700 hover:bg-gray-100'
                       }`}
                   >
+                    <MapPin size={20} />
+                    <span className="font-medium">Addresses</span>
+                  </button>
+
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+                  >
                     <LogOut size={20} />
-                    <span>Logout</span>
+                    <span className="font-medium">Logout</span>
                   </button>
                 </nav>
               </div>
@@ -230,6 +325,158 @@ export default function Profile() {
                         </div>
                       ))}
                     </div>
+                  )}
+                </div>
+              )}
+
+              {/* Orders Section */}
+              {activeSection === 'orders' && (
+                <div className="bg-white rounded-xl shadow-sm p-8">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">My Orders</h2>
+
+                  {isLoadingOrders ? (
+                    <div className="text-center py-12">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
+                      <p className="mt-4 text-gray-600">Loading orders...</p>
+                    </div>
+                  ) : orderList.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Package size={64} className="mx-auto text-gray-300 mb-4" />
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2">No orders yet</h3>
+                      <p className="text-gray-600">Start shopping to see your orders here</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {orderList.map((order) => (
+                        <div key={order._id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+                          <div className="flex justify-between items-start mb-4">
+                            <div>
+                              <p className="text-sm text-gray-500">Order ID: {order._id}</p>
+                              <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
+                                <Clock size={14} />
+                                {moment(order.createdAt).format('MMM DD, YYYY • hh:mm A')}
+                              </p>
+                            </div>
+                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
+                              {order.status}
+                            </span>
+                          </div>
+
+                          <div className="space-y-3 mb-4">
+                            {order.items?.map((item, idx) => (
+                              <div key={idx} className="flex items-center gap-4">
+                                <img
+                                  src={item.productId?.imgUrl || item.productId?.image || 'https://via.placeholder.com/60'}
+                                  alt={item.productId?.title}
+                                  className="w-16 h-16 object-cover rounded-lg"
+                                />
+                                <div className="flex-1">
+                                  <h4 className="font-medium text-gray-900">{item.productId?.title}</h4>
+                                  <p className="text-sm text-gray-500">Qty: {item.quantity} × ₹{item.price}</p>
+                                </div>
+                                <p className="font-semibold text-gray-900">₹{(item.price * item.quantity).toFixed(2)}</p>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className="border-t border-gray-200 pt-4">
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-gray-600">Total Amount:</span>
+                              <span className="text-xl font-bold text-gray-900">₹{order.totalPrice?.toFixed(2)}</span>
+                            </div>
+                            {order.shippingAddress && (
+                              <div className="mt-3 text-sm text-gray-600">
+                                <p className="flex items-center gap-1">
+                                  <MapPin size={14} />
+                                  {order.shippingAddress.address?.line1}, {order.shippingAddress.city}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Addresses Section */}
+              {activeSection === 'addresses' && (
+                <div className="bg-white rounded-xl shadow-sm p-8">
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-2xl font-bold text-gray-900">My Addresses</h2>
+                    {!showAddressForm && addresses.length < 5 && (
+                      <button
+                        onClick={() => {
+                          setEditingAddress(null);
+                          setShowAddressForm(true);
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
+                      >
+                        <Plus size={20} />
+                        Add Address
+                      </button>
+                    )}
+                  </div>
+
+                  {showAddressForm ? (
+                    <div className="mb-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                        {editingAddress ? 'Edit Address' : 'Add New Address'}
+                      </h3>
+                      <AddressForm
+                        onSubmit={editingAddress ? handleUpdateAddress : handleAddAddress}
+                        onCancel={() => {
+                          setShowAddressForm(false);
+                          setEditingAddress(null);
+                        }}
+                        initialData={editingAddress}
+                        isLoading={isSavingAddress}
+                      />
+                    </div>
+                  ) : isLoadingAddresses ? (
+                    <div className="text-center py-12">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
+                      <p className="mt-4 text-gray-600">Loading addresses...</p>
+                    </div>
+                  ) : addresses.length === 0 ? (
+                    <div className="text-center py-12">
+                      <MapPin size={64} className="mx-auto text-gray-300 mb-4" />
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2">No addresses saved</h3>
+                      <p className="text-gray-600 mb-6">Add your first address to make checkout faster</p>
+                      <button
+                        onClick={() => setShowAddressForm(true)}
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
+                      >
+                        <Plus size={20} />
+                        Add Your First Address
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      {addresses.length >= 5 && (
+                        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <p className="text-sm text-yellow-800">
+                            You've reached the maximum limit of 5 addresses. Delete an address to add a new one.
+                          </p>
+                        </div>
+                      )}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {addresses.map((address) => (
+                          <AddressCard
+                            key={address._id}
+                            address={address}
+                            isDefault={address.isDefault}
+                            onEdit={(addr) => {
+                              setEditingAddress(addr);
+                              setShowAddressForm(true);
+                            }}
+                            onDelete={handleDeleteAddress}
+                            onSetDefault={handleSetDefaultAddress}
+                          />
+                        ))}
+                      </div>
+                    </>
                   )}
                 </div>
               )}

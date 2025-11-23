@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Star, Truck, Shield, Award, Gift } from "react-feather";
+import RecommendedSection from "../components/RecommendedSection";
 
 const Home = () => {
     return (
@@ -36,7 +37,7 @@ const Home = () => {
                     </div>
                 </div>
             </section>
-
+            {/* <RecommendedSection /> */}
             {/* Categories Section */}
             <section className="py-20">
                 <div className="container mx-auto px-4">
