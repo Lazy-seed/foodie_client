@@ -10,6 +10,12 @@ import LoginPage from "./pages/LoginPage";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Page404 from "./pages/404/Page404";
+import AdminLayout from "./layouts/AdminLayout";
+import AdminRoute from "./components/AdminRoute";
+import Dashboard from "./pages/admin/Dashboard";
+import Products from "./pages/admin/Products";
+import Orders from "./pages/admin/Orders";
+import Users from "./pages/admin/Users";
 import { useSelector } from "react-redux";
 import { useRefreshMutation } from "./features/auth/authApiSlice";
 import { selectCurrentUser } from "./features/auth/authSlice";
@@ -49,6 +55,14 @@ const App = () => {
         </Route>
 
         <Route path="*" element={<Page404 />} />
+      </Route>
+
+      {/* Admin Routes - Outside MainLayout */}
+      <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+        <Route index element={<Dashboard />} />
+        <Route path="products" element={<Products />} />
+        <Route path="orders" element={<Orders />} />
+        <Route path="users" element={<Users />} />
       </Route>
     </Routes>
   );
