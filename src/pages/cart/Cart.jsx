@@ -456,6 +456,7 @@ export default function Cart() {
                         <input
                           type="text"
                           name="firstName"
+                          data-demo="firstname-input"
                           value={address.firstName}
                           onChange={handleAddressChange}
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none"
@@ -477,6 +478,7 @@ export default function Cart() {
                         <input
                           type="text"
                           name="addressLine1"
+                          data-demo="address-input"
                           value={address.addressLine1}
                           onChange={handleAddressChange}
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none"
@@ -518,6 +520,7 @@ export default function Cart() {
                         <input
                           type="text"
                           name="contact"
+                          data-demo="contact-input"
                           value={address.contact}
                           onChange={handleAddressChange}
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none"
@@ -562,6 +565,7 @@ export default function Cart() {
 
               {step === 'cart' ? (
                 <button
+                  data-demo="checkout-btn"
                   onClick={() => setStep('address')}
                   className="w-full py-3 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition-colors flex justify-center items-center gap-2"
                 >
@@ -569,6 +573,7 @@ export default function Cart() {
                 </button>
               ) : (
                 <button
+                  data-demo="place-order-btn"
                   onClick={handlePayment}
                   disabled={isProcessingPayment}
                   className="w-full py-3 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition-colors flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"

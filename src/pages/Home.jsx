@@ -58,7 +58,7 @@ const Home = () => {
                             { title: "Mexican Cuisine", count: "30 items", icon: "🌮" },
                             { title: "Italian Cuisine", count: "19 items", icon: "🍕" },
                         ].map((cat, idx) => (
-                            <div key={idx} className="bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 border border-gray-100 text-center group cursor-pointer">
+                            <div key={idx} data-demo={`category-${cat.title}`} className="bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 border border-gray-100 text-center group cursor-pointer">
                                 <div className="text-4xl mb-4 transform group-hover:scale-110 transition-transform duration-300">{cat.icon}</div>
                                 <h3 className="text-xl font-bold text-gray-900 mb-1">{cat.title}</h3>
                                 <span className="text-gray-500 text-sm">{cat.count}</span>

@@ -53,6 +53,7 @@ const AdminLayout = () => {
                         <Link
                             key={item.path}
                             to={item.path}
+                            {...(item.path === '/admin/orders' && { 'data-demo': 'orders-link' })}
                             className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive(item.path)
                                 ? 'bg-red-600 text-white'
                                 : 'text-gray-300 hover:bg-gray-800'

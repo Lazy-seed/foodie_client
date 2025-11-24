@@ -1,3 +1,30 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Demo Mode Styles */
+.demo-highlight {
+  position: relative;
+  z-index: 40;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.5), 0 0 20px rgba(99, 102, 241, 0.3);
+  transition: all 0.3s ease;
+  animation: pulse-highlight 2s infinite;
+  border-radius: 4px;
+}
+
+@keyframes pulse-highlight {
+  0% {
+    box-shadow: 0 0 0 0px rgba(99, 102, 241, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(99, 102, 241, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0px rgba(99, 102, 241, 0);
+  }
+}
+
+/* Ensure modal is above highlight */
+.demo-modal {
+  z-index: 50;
+}

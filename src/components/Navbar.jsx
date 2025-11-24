@@ -5,6 +5,7 @@ import { MapPin, ShoppingCart, Menu, X } from "react-feather";
 import LogoWhite from "../assets/images/logo/logo-white.png";
 import PincodePop from "./PincodePop";
 import { setLocation } from "../redux/slices/settingSlice";
+import DemoButton from "./DemoButton";
 
 const Navbar = () => {
     const dispatch = useDispatch();
@@ -55,6 +56,9 @@ const Navbar = () => {
 
                         {/* Right Side Actions */}
                         <div className="flex items-center space-x-4">
+                            <div className="hidden md:block">
+                                <DemoButton />
+                            </div>
                             {/* Location Selector */}
                             <button
                                 onClick={handleModal}
@@ -69,6 +73,7 @@ const Navbar = () => {
                             {/* Cart */}
                             <Link
                                 to="/cart"
+                                data-demo="cart-icon"
                                 className="relative p-2 hover:bg-gray-800 rounded-lg transition-colors"
                             >
                                 <ShoppingCart size={24} className="text-white" />
@@ -114,6 +119,9 @@ const Navbar = () => {
                                 >
                                     Profile
                                 </Link>
+                                <div className="flex justify-center">
+                                    <DemoButton />
+                                </div>
                                 <button
                                     onClick={() => {
                                         handleModal();

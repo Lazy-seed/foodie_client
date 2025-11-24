@@ -132,6 +132,7 @@ const Orders = () => {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <select
+                                                    data-demo={`order-${order._id}-status`}
                                                     value={order.status}
                                                     onChange={(e) => handleStatusUpdate(order._id, e.target.value)}
                                                     className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(order.status)} border-0 outline-none cursor-pointer`}
@@ -144,7 +145,10 @@ const Orders = () => {
                                                 </select>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                                <button className="text-blue-600 hover:text-blue-900 flex items-center gap-1">
+                                                <button
+                                                    data-demo={`order-${order._id}-view`}
+                                                    className="text-blue-600 hover:text-blue-900 flex items-center gap-1"
+                                                >
                                                     <Eye size={16} />
                                                     View
                                                 </button>

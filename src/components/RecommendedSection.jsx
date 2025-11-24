@@ -153,6 +153,7 @@ const RecommendedSection = () => {
                                         )}
                                     </div>
                                     <button
+                                        data-demo={`product-${product._id}-add`}
                                         onClick={() => handleAddToCart(product)}
                                         className="p-3 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors shadow-md hover:shadow-lg"
                                     >
