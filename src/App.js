@@ -38,6 +38,28 @@ const App = () => {
     }
   }, []); // Empty dependency array - only run once on mount
 
+  // Global Socket Listener
+  useEffect(() => {
+    if (user?.id) {
+      import("./socket").then(({ socket }) => {
+        socket.emit('joinRoom', user.id);
+
+        const handleStatusUpdate = (data) => {
+          const { orderId, status } = data;
+          import("react-hot-toast").then(({ toast }) => {
+            toast.success(`Order #${orderId.slice(-8).toUpperCase()} is now ${status}`);
+          });
+        };
+
+        socket.on('orderStatusUpdated', handleStatusUpdate);
+
+        return () => {
+          socket.off('orderStatusUpdated', handleStatusUpdate);
+        };
+      });
+    }
+  }, []);
+
   return (
     <Routes>
       <Route path="/" element={<MainLayout />}>

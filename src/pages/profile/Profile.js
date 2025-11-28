@@ -8,6 +8,7 @@ import { logOut, selectCurrentUser } from '../../features/auth/authSlice';
 import JwtApi from '../../api/JwtApi';
 import AddressCard from '../../components/AddressCard';
 import AddressForm from '../../components/AddressForm';
+import { socket } from '../../socket';
 
 export default function Profile() {
   const { section } = useParams();
@@ -134,6 +135,25 @@ export default function Profile() {
       getAddresses();
     }
   }, [activeSection]);
+
+  // Real-time order updates (List update only)
+  useEffect(() => {
+    const handleStatusUpdate = (data) => {
+      const { orderId, status } = data;
+
+      setOrderList(prevOrders =>
+        prevOrders.map(order =>
+          order._id === orderId ? { ...order, status } : order
+        )
+      );
+    };
+
+    socket.on('orderStatusUpdated', handleStatusUpdate);
+
+    return () => {
+      socket.off('orderStatusUpdated', handleStatusUpdate);
+    };
+  }, []);
 
   // Status badge color helper
   const getStatusColor = (status) => {
@@ -321,77 +341,6 @@ export default function Profile() {
                               <p className="text-sm text-gray-500">Total Amount</p>
                               <p className="text-xl font-bold text-gray-900">₹{order.totalPrice?.toFixed(2)}</p>
                             </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Orders Section */}
-              {activeSection === 'orders' && (
-                <div className="bg-white rounded-xl shadow-sm p-8">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">My Orders</h2>
-
-                  {isLoadingOrders ? (
-                    <div className="text-center py-12">
-                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
-                      <p className="mt-4 text-gray-600">Loading orders...</p>
-                    </div>
-                  ) : orderList.length === 0 ? (
-                    <div className="text-center py-12">
-                      <Package size={64} className="mx-auto text-gray-300 mb-4" />
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">No orders yet</h3>
-                      <p className="text-gray-600">Start shopping to see your orders here</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-6">
-                      {orderList.map((order) => (
-                        <div key={order._id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-                          <div className="flex justify-between items-start mb-4">
-                            <div>
-                              <p className="text-sm text-gray-500">Order ID: {order._id}</p>
-                              <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
-                                <Clock size={14} />
-                                {moment(order.createdAt).format('MMM DD, YYYY • hh:mm A')}
-                              </p>
-                            </div>
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
-                              {order.status}
-                            </span>
-                          </div>
-
-                          <div className="space-y-3 mb-4">
-                            {order.items?.map((item, idx) => (
-                              <div key={idx} className="flex items-center gap-4">
-                                <img
-                                  src={item.productId?.imgUrl || item.productId?.image || 'https://via.placeholder.com/60'}
-                                  alt={item.productId?.title}
-                                  className="w-16 h-16 object-cover rounded-lg"
-                                />
-                                <div className="flex-1">
-                                  <h4 className="font-medium text-gray-900">{item.productId?.title}</h4>
-                                  <p className="text-sm text-gray-500">Qty: {item.quantity} × ₹{item.price}</p>
-                                </div>
-                                <p className="font-semibold text-gray-900">₹{(item.price * item.quantity).toFixed(2)}</p>
-                              </div>
-                            ))}
-                          </div>
-
-                          <div className="border-t border-gray-200 pt-4">
-                            <div className="flex justify-between items-center mb-2">
-                              <span className="text-gray-600">Total Amount:</span>
-                              <span className="text-xl font-bold text-gray-900">₹{order.totalPrice?.toFixed(2)}</span>
-                            </div>
-                            {order.shippingAddress && (
-                              <div className="mt-3 text-sm text-gray-600">
-                                <p className="flex items-center gap-1">
-                                  <MapPin size={14} />
-                                  {order.shippingAddress.address?.line1}, {order.shippingAddress.city}
-                                </p>
-                              </div>
-                            )}
                           </div>
                         </div>
                       ))}
