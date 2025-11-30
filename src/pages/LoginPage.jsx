@@ -26,7 +26,11 @@ export default function LoginPage({ isLogin = false }) {
             if (isLogin) {
                 await login({ email: formData.email, password: formData.password }).unwrap();
                 toast.success('Logged in successfully!');
-                navigate('/');
+                if (formData.email === "demo-admin@foodie.com") {
+                    navigate('/admin');
+                } else {
+                    navigate('/menu/Popular');
+                }
             } else {
                 if (formData.password !== formData.confirmPassword) {
                     return toast.error("Passwords don't match");
@@ -138,6 +142,32 @@ export default function LoginPage({ isLogin = false }) {
                     </p>
                 </div>
             </div>
+
+            {/* Demo Credentials Section */}
+            {isLogin && (
+                <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h3 className="text-sm font-semibold text-blue-800 mb-2">Try Demo Account</h3>
+                    <div className="space-y-2 text-xs text-blue-700">
+                        <div className="flex justify-between items-center bg-white/50 p-2 rounded cursor-pointer hover:bg-white transition-colors"
+                            onClick={() => setFormData({ ...formData, email: 'demo-user@foodie.com', password: 'demoPassword123!' })}>
+                            <div>
+                                <span className="font-bold">User:</span> demo-user@foodie.com
+                            </div>
+                            <span className="bg-blue-200 text-blue-800 px-1.5 py-0.5 rounded text-[10px]">Click to Fill</span>
+                        </div>
+                        <div className="flex justify-between items-center bg-white/50 p-2 rounded cursor-pointer hover:bg-white transition-colors"
+                            onClick={() => setFormData({ ...formData, email: 'demo-admin@foodie.com', password: 'demoPassword123!' })}>
+                            <div>
+                                <span className="font-bold">Admin:</span> demo-admin@foodie.com
+                            </div>
+                            <span className="bg-blue-200 text-blue-800 px-1.5 py-0.5 rounded text-[10px]">Click to Fill</span>
+                        </div>
+                        <div className="mt-1 text-[10px] text-blue-600/80 text-center">
+                            Password: demoPassword123!
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

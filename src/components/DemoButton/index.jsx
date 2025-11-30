@@ -70,13 +70,13 @@ const DemoButton = () => {
 
     return (
         <>
-            <button
+            {/* <button
                 onClick={() => setShowModal(true)}
                 className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all shadow-md"
             >
                 <Monitor size={18} />
                 <span className="font-medium">Watch Demo</span>
-            </button>
+            </button> */}
 
             {showModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
