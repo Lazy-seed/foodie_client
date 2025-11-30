@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Modal, ModalBody, ModalHeader, ListGroup, ListGroupItem, Button, Input, InputGroup } from 'reactstrap';
-import { MapPin, Search, Navigation } from 'react-feather';
+import { MapPin, Search, Navigation, X, Check } from 'react-feather';
 import { setLocation } from '../redux/slices/settingSlice';
 import toast from 'react-hot-toast';
 
@@ -95,99 +94,115 @@ export default function PincodePop() {
         );
     };
 
+    if (!location?.showModal) return null;
+
     return (
-        <Modal
-            isOpen={location?.showModal || false}
-            toggle={location?.location ? handleModal : undefined}
-            backdrop="static"
-            size="lg"
-            centered
-        >
-            <ModalHeader toggle={location?.location ? handleModal : null}>
-                <div className="flex items-center gap-2">
-                    <MapPin size={24} className="text-red-600" />
-                    <span>Select Your Nearest Store</span>
-                </div>
-            </ModalHeader>
-            <ModalBody>
-                {/* Search Bar */}
-                <InputGroup className="mb-4">
-                    <div className="input-group-prepend">
-                        <span className="input-group-text bg-white border-end-0">
-                            <Search size={18} className="text-gray-400" />
-                        </span>
-                    </div>
-                    <Input
-                        type="text"
-                        value={searchTerm}
-                        onChange={handleSearch}
-                        placeholder="Search by city, area, or pincode..."
-                        className="border-start-0"
-                    />
-                </InputGroup>
-
-                {/* Use Current Location Button */}
-                <Button
-                    color="primary"
-                    outline
-                    onClick={fetchCurrentLocation}
-                    disabled={isLoadingLocation}
-                    className="w-100 mb-4 d-flex align-items-center justify-content-center gap-2"
-                >
-                    <Navigation size={18} />
-                    {isLoadingLocation ? 'Detecting location...' : 'Use Current Location'}
-                </Button>
-
-                {/* Store List */}
-                <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                    {filteredStores.length > 0 ? (
-                        <ListGroup flush>
-                            {filteredStores.map((store) => (
-                                <ListGroupItem
-                                    key={store._id}
-                                    className="border-0 border-bottom py-3 hover-bg-light"
-                                    style={{ cursor: 'pointer' }}
-                                >
-                                    <div className="d-flex justify-content-between align-items-start">
-                                        <div className="flex-grow-1">
-                                            <div className="d-flex align-items-center gap-2 mb-1">
-                                                <MapPin size={16} className="text-red-600" />
-                                                <strong className="text-dark">{store.name}</strong>
-                                            </div>
-                                            <p className="text-muted small mb-1">{store.address}</p>
-                                            <p className="text-muted small mb-0">
-                                                <strong>Pincode:</strong> {store.pincode}
-                                            </p>
-                                        </div>
-                                        <Button
-                                            color={location?.location?._id === store._id ? 'success' : 'outline-primary'}
-                                            size="sm"
-                                            onClick={() => handleSelectStore(store)}
-                                            className="ms-3"
-                                        >
-                                            {location?.location?._id === store._id ? '✓ Selected' : 'Select'}
-                                        </Button>
-                                    </div>
-                                </ListGroupItem>
-                            ))}
-                        </ListGroup>
-                    ) : (
-                        <div className="text-center py-5">
-                            <MapPin size={48} className="text-gray-300 mb-3" />
-                            <p className="text-muted">No stores found matching your search.</p>
-                            <Button
-                                color="link"
-                                onClick={() => {
-                                    setSearchTerm("");
-                                    setFilteredStores(storeData);
-                                }}
-                            >
-                                Clear search
-                            </Button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                {/* Header */}
+                <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-white">
+                    <div className="flex items-center gap-2 text-gray-800">
+                        <div className="bg-red-50 p-2 rounded-full">
+                            <MapPin size={20} className="text-red-600" />
                         </div>
+                        <h2 className="font-bold text-lg">Select Your Nearest Store</h2>
+                    </div>
+                    {location?.location && (
+                        <button
+                            onClick={handleModal}
+                            className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500"
+                        >
+                            <X size={20} />
+                        </button>
                     )}
                 </div>
-            </ModalBody>
-        </Modal>
+
+                <div className="p-6">
+                    {/* Search Bar */}
+                    <div className="relative mb-4">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Search size={18} className="text-gray-400" />
+                        </div>
+                        <input
+                            type="text"
+                            value={searchTerm}
+                            onChange={handleSearch}
+                            placeholder="Search by city, area, or pincode..."
+                            className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all"
+                        />
+                    </div>
+
+                    {/* Use Current Location Button */}
+                    <button
+                        onClick={fetchCurrentLocation}
+                        disabled={isLoadingLocation}
+                        className="w-full mb-6 flex items-center justify-center gap-2 py-3 px-4 border-2 border-dashed border-red-200 rounded-xl text-red-600 font-medium hover:bg-red-50 hover:border-red-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <Navigation size={18} className={isLoadingLocation ? "animate-spin" : ""} />
+                        {isLoadingLocation ? 'Detecting location...' : 'Use Current Location'}
+                    </button>
+
+                    {/* Store List */}
+                    <div className="max-h-[400px] overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+                        {filteredStores.length > 0 ? (
+                            filteredStores.map((store) => {
+                                const isSelected = location?.location?._id === store._id;
+                                return (
+                                    <div
+                                        key={store._id}
+                                        onClick={() => handleSelectStore(store)}
+                                        className={`group p-4 rounded-xl border transition-all cursor-pointer flex justify-between items-center ${isSelected
+                                                ? 'bg-red-50 border-red-200 ring-1 ring-red-200'
+                                                : 'bg-white border-gray-100 hover:border-red-200 hover:shadow-md'
+                                            }`}
+                                    >
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <h3 className={`font-bold ${isSelected ? 'text-red-700' : 'text-gray-800'}`}>
+                                                    {store.name}
+                                                </h3>
+                                                {isSelected && (
+                                                    <span className="bg-red-100 text-red-700 text-[10px] px-2 py-0.5 rounded-full font-bold">
+                                                        SELECTED
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-gray-500 text-sm mb-1">{store.address}</p>
+                                            <p className="text-gray-400 text-xs font-medium">
+                                                Pincode: {store.pincode}
+                                            </p>
+                                        </div>
+
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isSelected
+                                                ? 'bg-red-600 text-white'
+                                                : 'bg-gray-100 text-gray-300 group-hover:bg-red-100 group-hover:text-red-600'
+                                            }`}>
+                                            {isSelected ? <Check size={16} /> : <MapPin size={16} />}
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        ) : (
+                            <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                                <div className="bg-white p-3 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3 shadow-sm">
+                                    <MapPin size={32} className="text-gray-300" />
+                                </div>
+                                <h3 className="text-gray-900 font-medium mb-1">No stores found</h3>
+                                <p className="text-gray-500 text-sm mb-4">We couldn't find any stores matching "{searchTerm}"</p>
+                                <button
+                                    onClick={() => {
+                                        setSearchTerm("");
+                                        setFilteredStores(storeData);
+                                    }}
+                                    className="text-red-600 font-medium text-sm hover:underline"
+                                >
+                                    Clear search & show all
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 }
