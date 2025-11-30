@@ -68,8 +68,8 @@ export default function ProductList() {
                                     key={category.id}
                                     onClick={() => handleCategoryChange(category.id)}
                                     className={`px-4 py-2 rounded-full whitespace-nowrap transition-colors ${selectedCategory === category.id
-                                            ? "bg-red-600 text-white"
-                                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                        ? "bg-red-600 text-white"
+                                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                         }`}
                                 >
                                     {category.name}
@@ -135,7 +135,7 @@ export default function ProductList() {
                                         <p className="text-gray-500 text-sm mb-4 line-clamp-2">{product.description}</p>
 
                                         <div className="flex justify-between items-center">
-                                            <span className="text-xl font-bold text-gray-900">${product.price}</span>
+                                            <span className="text-xl font-bold text-gray-900">₹{product.price}</span>
                                             <button
                                                 onClick={() => handleAddToCart(product)}
                                                 className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-colors font-medium"
