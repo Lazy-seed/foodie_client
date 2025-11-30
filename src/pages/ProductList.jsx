@@ -106,8 +106,8 @@ export default function ProductList() {
                 ) : (
                     <>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            {data?.products?.map((product) => (
-                                <div key={product._id} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden group">
+                            {data?.products?.map((product, index) => (
+                                <div key={product._id} data-demo={`product-${index + 1}`} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden group">
                                     <div className="relative h-48 overflow-hidden">
                                         <img
                                             src={product.imgUrl || "https://via.placeholder.com/300"}
@@ -137,6 +137,7 @@ export default function ProductList() {
                                         <div className="flex justify-between items-center">
                                             <span className="text-xl font-bold text-gray-900">₹{product.price}</span>
                                             <button
+                                                data-demo={`product-${index + 1}-add`}
                                                 onClick={() => handleAddToCart(product)}
                                                 className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-colors font-medium"
                                             >

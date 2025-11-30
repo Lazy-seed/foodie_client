@@ -25,7 +25,7 @@ export const useDemo = () => {
         try {
             const response = await JwtApi.post('/demo/auth/demo-token', { role: type });
             const { token, user } = response;
-            dispatch(setCredentials({ token, user }));
+            dispatch(setCredentials({ accessToken: token, user }));
 
             // Initialize runner
             const steps = type === 'user' ? userDemoSteps : adminDemoSteps;

@@ -41,6 +41,7 @@ const Navbar = () => {
                                 Home
                             </Link>
                             <Link
+                                data-demo="category-Burgers"
                                 to="/menu/Popular"
                                 className="text-white hover:text-red-500 font-medium transition-colors"
                             >
