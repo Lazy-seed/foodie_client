@@ -19,12 +19,16 @@ import Users from "./pages/admin/Users";
 import { useSelector } from "react-redux";
 import { useRefreshMutation } from "./features/auth/authApiSlice";
 import { selectCurrentUser } from "./features/auth/authSlice";
+import { BackendStatusIndicator } from "./components/BackendStatusIndicator";
+import { DemoBanner } from "./components/DemoBanner";
+import { useApiLoading } from "./hooks/useApiLoading";
 
 const App = () => {
   const { pathname } = useLocation();
   const [refresh] = useRefreshMutation();
   const user = useSelector(selectCurrentUser);
   const hasRefreshed = useRef(false);
+  const isApiLoading = useApiLoading();
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -61,32 +65,36 @@ const App = () => {
   }, []);
 
   return (
-    <Routes>
-      <Route path="/" element={<MainLayout />}>
-        <Route index element={<Home />} />
-        <Route path="menu/:catg" element={<ProductList />} />
-        <Route path="cart" element={<Cart />} />
-        <Route path="login" element={<LoginPage isLogin={true} />} />
-        <Route path="signup" element={<LoginPage isLogin={false} />} />
-        <Route path="forgot-password" element={<ForgotPassword />} />
-        <Route path="reset-password/:resetToken" element={<ResetPassword />} />
+    <>
+      <BackendStatusIndicator isLoading={isApiLoading} />
+      <DemoBanner />
+      <Routes>
+        <Route path="/" element={<MainLayout />}>
+          <Route index element={<Home />} />
+          <Route path="menu/:catg" element={<ProductList />} />
+          <Route path="cart" element={<Cart />} />
+          <Route path="login" element={<LoginPage isLogin={true} />} />
+          <Route path="signup" element={<LoginPage isLogin={false} />} />
+          <Route path="forgot-password" element={<ForgotPassword />} />
+          <Route path="reset-password/:resetToken" element={<ResetPassword />} />
 
-        {/* Protected Routes */}
-        <Route element={<PrivateRoute />}>
-          <Route path="profile/:section" element={<Profile />} />
+          {/* Protected Routes */}
+          <Route element={<PrivateRoute />}>
+            <Route path="profile/:section" element={<Profile />} />
+          </Route>
+
+          <Route path="*" element={<Page404 />} />
         </Route>
 
-        <Route path="*" element={<Page404 />} />
-      </Route>
-
-      {/* Admin Routes - Outside MainLayout */}
-      <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
-        <Route index element={<Dashboard />} />
-        <Route path="products" element={<Products />} />
-        <Route path="orders" element={<Orders />} />
-        <Route path="users" element={<Users />} />
-      </Route>
-    </Routes>
+        {/* Admin Routes - Outside MainLayout */}
+        <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+          <Route index element={<Dashboard />} />
+          <Route path="products" element={<Products />} />
+          <Route path="orders" element={<Orders />} />
+          <Route path="users" element={<Users />} />
+        </Route>
+      </Routes>
+    </>
   );
 };
 
