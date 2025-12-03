@@ -66,8 +66,8 @@ const App = () => {
 
   return (
     <>
-      <BackendStatusIndicator isLoading={isApiLoading} />
-      <DemoBanner />
+      {/* <BackendStatusIndicator isLoading={isApiLoading} />
+      <DemoBanner /> */}
       <Routes>
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Home />} />
